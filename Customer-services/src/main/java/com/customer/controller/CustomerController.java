@@ -42,9 +42,22 @@ public class CustomerController {
         return service.getCustomerById(customerId);
     }
 
+    @GetMapping("/by-email")
+    public Customer getByEmail(@RequestParam String email) {
+        return service.getAllCustomers().stream()
+                .filter(customer -> customer.getEmail() != null && customer.getEmail().equalsIgnoreCase(email))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Customer not found with email: " + email));
+    }
+
     // GET ALL
     @GetMapping
     public List<Customer> getAll() {
+        return service.getAllCustomers();
+    }
+
+    @GetMapping("/list")
+    public List<Customer> list() {
         return service.getAllCustomers();
     }
 }

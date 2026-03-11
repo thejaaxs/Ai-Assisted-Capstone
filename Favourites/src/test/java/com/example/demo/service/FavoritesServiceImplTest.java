@@ -8,7 +8,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.customer.entity.Customer;
 import com.example.demo.client.CustomerClient;
 import com.example.demo.entity.Favorites;
 import com.example.demo.exception.DuplicateResourceException;
@@ -37,7 +36,7 @@ class FavoritesServiceImplTest {
     @Test
     void addShouldNormalizeAndPersistFavorite() {
         Favorites favorite = favorite(null, "  Yamaha  ", "  R15  ");
-        when(customerClient.getCustomer(10L)).thenReturn(new Customer());
+        when(customerClient.getCustomer(10L)).thenReturn(new CustomerClient.CustomerSummary());
         when(repo.findByCustomerIdAndDealerIdAndProductNameIgnoreCase(10L, 20L, "R15"))
                 .thenReturn(Optional.empty());
         when(repo.save(any(Favorites.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -53,7 +52,7 @@ class FavoritesServiceImplTest {
     @Test
     void addShouldRejectDuplicateFavorite() {
         Favorites favorite = favorite(null, "Honda", "CB350");
-        when(customerClient.getCustomer(10L)).thenReturn(new Customer());
+        when(customerClient.getCustomer(10L)).thenReturn(new CustomerClient.CustomerSummary());
         when(repo.findByCustomerIdAndDealerIdAndProductNameIgnoreCase(10L, 20L, "CB350"))
                 .thenReturn(Optional.of(favorite(99L, "Honda", "CB350")));
 
@@ -100,7 +99,7 @@ class FavoritesServiceImplTest {
         updated.setDealerId(21L);
 
         when(repo.findById(1L)).thenReturn(Optional.of(existing));
-        when(customerClient.getCustomer(11L)).thenReturn(new Customer());
+        when(customerClient.getCustomer(11L)).thenReturn(new CustomerClient.CustomerSummary());
         when(repo.findByCustomerIdAndDealerIdAndProductNameIgnoreCase(11L, 21L, "Ninja 300"))
                 .thenReturn(Optional.empty());
         when(repo.save(existing)).thenReturn(existing);

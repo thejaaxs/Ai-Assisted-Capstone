@@ -11,6 +11,5 @@ public class DealerServiceApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(DealerServiceApplication.class, args);
-        System.out.println("enter the dealer sercive ");
     }
 }

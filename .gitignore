@@ -1,1 +1,8 @@
 /.metadata/
+**/target/
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings/
+**/.mvn/wrapper/maven-wrapper.jar
+**/uploads/

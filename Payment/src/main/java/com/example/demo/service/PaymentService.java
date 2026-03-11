@@ -354,6 +354,7 @@ import com.example.demo.repository.PaymentRepository;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -369,6 +370,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class PaymentService {
 
     private static final String MOCK_KEY_ID = "mock_key";
@@ -456,7 +458,7 @@ public class PaymentService {
             Order order = razorpayClient.orders.create(orderRequest);
             razorpayOrderId = order.get("id").toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warn("Razorpay order creation failed for bookingId={}", booking.id, e);
 
             if (mockFallbackEnabled) {
                 return createMockOrder(
@@ -620,12 +622,12 @@ public class PaymentService {
                         booking.dealerId,
                         new DealerClient.CreateNotificationRequest(
                                 "PAYMENT",
-                                "Payment Recieved for Booking #" + booking.id + " (Rs." + booking.amount + ")"
+                                "Payment received for Booking #" + booking.id + " (Rs." + booking.amount + ")"
                         )
                 );
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warn("Dealer notification failed after payment verification for bookingId={}", req.getBookingId(), e);
         }
 
         return VerifyPaymentResponse.builder()
@@ -670,7 +672,7 @@ public class PaymentService {
 
             return generatedSignature.equals(signature);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warn("Razorpay signature verification failed for orderId={}", orderId, e);
             return false;
         }
     }
