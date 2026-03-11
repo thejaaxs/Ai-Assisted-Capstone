@@ -1,167 +1,101 @@
-//package com.example.demo.controller;
-//
-//import com.example.demo.entity.Favorites;
-//import com.example.demo.exception.DuplicateResourceException;
-//import com.example.demo.exception.ResourceNotFoundException;
-//import com.example.demo.service.FavoritesService;
-//
-//import org.junit.jupiter.api.Test;
-//import org.mockito.Mockito;
-//
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-//import org.springframework.boot.test.mock.mockito.MockBean;
-//import org.springframework.context.annotation.Import;
-//import org.springframework.security.test.context.support.WithMockUser;
-//import org.springframework.test.web.servlet.MockMvc;
-//
-//import java.util.List;
-//
-//import static org.hamcrest.Matchers.*;
-//import static org.mockito.Mockito.verify;
-//import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-//
-//@WebMvcTest(FavoritesController.class)
-//
-//class FavoritesControllerTest {
-//
-//    @Autowired
-//    private MockMvc mockMvc;
-//
-//    @MockBean
-//    private FavoritesService service;
-//
-//    // =========================
-//    // ADD SUCCESS
-//    // =========================
-//    @Test
-//    @WithMockUser
-//    void add_ShouldReturnSavedFavorite() throws Exception {
-//
-//        Favorites fav = new Favorites();
-//        fav.setDealerId(1L);
-//        fav.setDealerName("TestDealer");
-//        fav.setAddress("Chennai");
-//        fav.setProductName("Car");
-//        fav.setReason("Nearby");
-//
-//        Mockito.when(service.add(Mockito.any(Favorites.class)))
-//                .thenReturn(fav);
-//
-//        mockMvc.perform(post("/favorites/add")
-//                .contentType("application/json")
-//                .content("""
-//                        {
-//                          "dealerId": 1,
-//                          "dealerName": "TestDealer",
-//                          "address": "Chennai",
-//                          "productName": "Car",
-//                          "reason": "Nearby"
-//                        }
-//                        """))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.dealerName", is("TestDealer")))
-//                .andExpect(jsonPath("$.productName", is("Car")));
-//
-//        verify(service).add(Mockito.any(Favorites.class));
-//    }
-//
-//    // =========================
-//    // ADD DUPLICATE (409)
-//    // =========================
-//    @Test
-//    @WithMockUser
-//    void add_ShouldReturnConflict_WhenDuplicate() throws Exception {
-//
-//        Mockito.when(service.add(Mockito.any(Favorites.class)))
-//                .thenThrow(new DuplicateResourceException("Dealer already exists"));
-//
-//        mockMvc.perform(post("/favorites/add")
-//                .contentType("application/json")
-//                .content("""
-//                        {
-//                          "dealerId": 1,
-//                          "dealerName": "TestDealer",
-//                          "address": "Chennai"
-//                        }
-//                        """))
-//                .andExpect(status().isConflict());
-//    }
-//
-//    // =========================
-//    // DELETE NOT FOUND (404)
-//    // =========================
-//    @Test
-//    @WithMockUser
-//    void deleteByName_ShouldReturn404_WhenNotFound() throws Exception {
-//
-//        Mockito.doThrow(new ResourceNotFoundException("Not found"))
-//                .when(service).deleteByName("TestDealer");
-//
-//        mockMvc.perform(delete("/favorites/deleteByName")
-//                .param("name", "TestDealer"))
-//                .andExpect(status().isNotFound());
-//    }
-//
-//    // =========================
-//    // UPDATE SUCCESS
-//    // =========================
-//    @Test
-//    @WithMockUser
-//    void updateByName_ShouldReturnUpdatedDealer() throws Exception {
-//
-//        Favorites updated = new Favorites();
-//        updated.setDealerName("UpdatedDealer");
-//
-//        Mockito.when(service.updateByName(Mockito.eq("TestDealer"),
-//                Mockito.any(Favorites.class)))
-//                .thenReturn(updated);
-//
-//        mockMvc.perform(put("/favorites/updateByName")
-//                .param("name", "TestDealer")
-//                .contentType("application/json")
-//                .content("""
-//                        {
-//                          "dealerName": "UpdatedDealer",
-//                          "address": "Bangalore"
-//                        }
-//                        """))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.dealerName", is("UpdatedDealer")));
-//    }
-//
-//    // =========================
-//    // LIST ALL
-//    // =========================
-//    @Test
-//    @WithMockUser
-//    void list_ShouldReturnFavoritesList() throws Exception {
-//
-//        Favorites fav = new Favorites();
-//        fav.setDealerName("Dealer1");
-//
-//        Mockito.when(service.listAll())
-//                .thenReturn(List.of(fav));
-//
-//        mockMvc.perform(get("/favorites/list"))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$", hasSize(1)))
-//                .andExpect(jsonPath("$[0].dealerName", is("Dealer1")));
-//    }
-//
-//    // =========================
-//    // LIST BY NAME NOT FOUND
-//    // =========================
-//    @Test
-//    @WithMockUser
-//    void listByName_ShouldReturn404_WhenNotFound() throws Exception {
-//
-//        Mockito.when(service.listByName("Dealer1"))
-//                .thenThrow(new ResourceNotFoundException("Not found"));
-//
-//        mockMvc.perform(get("/favorites/byName")
-//                .param("name", "Dealer1"))
-//                .andExpect(status().isNotFound());
-//    }
-//}
+package com.example.demo.controller;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.example.demo.entity.Favorites;
+import com.example.demo.service.FavoritesService;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class FavoritesControllerTest {
+
+    @Mock
+    private FavoritesService service;
+
+    @InjectMocks
+    private FavoritesController controller;
+
+    @Test
+    void addShouldDelegateToService() {
+        Favorites favorite = favorite(1L, "Yamaha", "R15");
+        when(service.add(favorite)).thenReturn(favorite);
+
+        Favorites result = controller.add(favorite);
+
+        assertEquals(1L, result.getId());
+        verify(service).add(favorite);
+    }
+
+    @Test
+    void getByIdShouldReturnFavorite() {
+        Favorites favorite = favorite(2L, "Honda", "CB350");
+        when(service.getById(2L)).thenReturn(favorite);
+
+        Favorites result = controller.getById(2L);
+
+        assertEquals("Honda", result.getDealerName());
+        verify(service).getById(2L);
+    }
+
+    @Test
+    void deleteByIdShouldReturnMessage() {
+        String result = controller.deleteById(3L);
+
+        assertEquals("Deleted Successfully", result);
+        verify(service).deleteById(3L);
+    }
+
+    @Test
+    void updateByNameShouldReturnUpdatedFavorite() {
+        Favorites favorite = favorite(4L, "Suzuki", "V-Strom");
+        when(service.updateByName("Suzuki", favorite)).thenReturn(favorite);
+
+        Favorites result = controller.update("Suzuki", favorite);
+
+        assertEquals("V-Strom", result.getProductName());
+        verify(service).updateByName("Suzuki", favorite);
+    }
+
+    @Test
+    void listShouldReturnFavorites() {
+        when(service.listAll()).thenReturn(List.of(
+                favorite(1L, "Yamaha", "R15"),
+                favorite(2L, "Honda", "CB350")));
+
+        List<Favorites> result = controller.list();
+
+        assertEquals(2, result.size());
+        verify(service).listAll();
+    }
+
+    @Test
+    void listByNameShouldDelegateToService() {
+        when(service.listByName("Royal Enfield")).thenReturn(List.of(
+                favorite(5L, "Royal Enfield", "Hunter 350")));
+
+        List<Favorites> result = controller.listByName("Royal Enfield");
+
+        assertEquals(1, result.size());
+        assertEquals("Royal Enfield", result.get(0).getDealerName());
+        verify(service).listByName("Royal Enfield");
+    }
+
+    private Favorites favorite(Long id, String dealerName, String productName) {
+        Favorites favorite = new Favorites();
+        favorite.setId(id);
+        favorite.setCustomerId(10L);
+        favorite.setDealerId(20L);
+        favorite.setDealerName(dealerName);
+        favorite.setAddress("Bengaluru");
+        favorite.setProductName(productName);
+        favorite.setReason("Preferred");
+        return favorite;
+    }
+}

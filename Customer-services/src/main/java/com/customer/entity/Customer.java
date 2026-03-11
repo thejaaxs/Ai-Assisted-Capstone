@@ -1,9 +1,8 @@
 package com.customer.entity;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "customers")
@@ -16,10 +15,12 @@ public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "customer_id")
+    private Long customerId;
 
-    @Column(nullable = false)
-    private String name;
+    @JsonAlias({"name"})  // ✅ accepts old key
+    @Column(name = "customer_name", nullable = false)
+    private String customerName;
 
     @Column(nullable = false)
     private String address;
@@ -27,11 +28,7 @@ public class Customer {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
-    private String phone;
-
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+    @JsonAlias({"phone", "mobileNo"}) // ✅ accepts old keys
+    @Column(name = "contact_number", nullable = false)
+    private String contactNumber;
 }

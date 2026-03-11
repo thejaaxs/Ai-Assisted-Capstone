@@ -1,6 +1,8 @@
 package com.dealer.dto;
 
-import jakarta.validation.constraints.*;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -10,14 +12,17 @@ import lombok.*;
 @AllArgsConstructor
 public class DealerRequestDTO {
 
+    @JsonAlias({"fullName", "name"})
     @NotBlank
     private String dealerName;
 
     @NotBlank
     private String address;
 
+    @JsonAlias({"mobileNo", "phone"})
     private String contactNumber;
 
+    @JsonAlias({"emailId"})
     @Email
     private String email;
 }

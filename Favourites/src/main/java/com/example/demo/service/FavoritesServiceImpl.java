@@ -1,16 +1,17 @@
 package com.example.demo.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.client.CustomerClient;
-import com.example.demo.repository.FavoritesRepository;
 import com.example.demo.entity.Favorites;
-import com.example.demo.exception.*;
+import com.example.demo.exception.DuplicateResourceException;
+import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.repository.FavoritesRepository;
 
-
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -18,94 +19,59 @@ import java.util.List;
 public class FavoritesServiceImpl implements FavoritesService {
 
     private final FavoritesRepository repo;
-    private final CustomerClient customerClient;   // ✅ Feign injected
+    private final CustomerClient customerClient;
 
-    // =========================
-    // ADD FAVORITE
-    // =========================
     @Override
     public Favorites add(Favorites favorite) {
-
-        if (favorite == null) {
-            throw new IllegalArgumentException("Favorite object cannot be null");
-        }
-
-        // 🔥 FEIGN VALIDATION (Customer must exist)
+        validateFavorite(favorite);
         customerClient.getCustomer(favorite.getCustomerId());
-
-        String dealerName = favorite.getDealerName().trim();
-
-        repo.findByDealerNameIgnoreCase(dealerName)
-                .ifPresent(f -> {
-                    throw new DuplicateResourceException(
-                            "Dealer '" + dealerName + "' already exists in favorites");
-                });
-
-        favorite.setDealerName(dealerName);
-
+        normalizeFavorite(favorite);
+        ensureUniqueFavorite(favorite, null);
         return repo.save(favorite);
     }
 
-    // =========================
-    // DELETE BY NAME
-    // =========================
     @Override
-    public void deleteByName(String name) {
+    @Transactional(readOnly = true)
+    public Favorites getById(Long id) {
+        return repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Favorite '" + id + "' not found"));
+    }
 
-        String dealerName = name.trim();
-
-        Favorites existing = repo.findByDealerNameIgnoreCase(dealerName)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Dealer '" + dealerName + "' not found in favorites"));
-
+    @Override
+    public void deleteById(Long id) {
+        Favorites existing = getById(id);
         repo.delete(existing);
     }
 
-    // =========================
-    // DELETE BY PRODUCT NAME
-    // =========================
+    @Override
+    public void deleteByName(String name) {
+        List<Favorites> favorites = findByDealerNameOrThrow(name);
+        repo.deleteAll(favorites);
+    }
+
     @Override
     public void deleteByProductName(String product) {
-
-        String productName = product.trim();
-
-        List<Favorites> favoritesList =
-                repo.findByProductNameIgnoreCase(productName);
-
-        if (favoritesList.isEmpty()) {
+        String productName = normalizeProductName(product);
+        List<Favorites> favorites = repo.findByProductNameIgnoreCase(productName);
+        if (favorites.isEmpty()) {
             throw new ResourceNotFoundException(
                     "No dealers found for product '" + productName + "'");
         }
-
-        repo.deleteAll(favoritesList);
+        repo.deleteAll(favorites);
     }
 
-    // =========================
-    // UPDATE BY DEALER NAME
-    // =========================
     @Override
-    public Favorites updateByName(String name, Favorites updated) {
+    public Favorites updateById(Long id, Favorites updated) {
+        validateFavorite(updated);
+        Favorites existing = getById(id);
+        customerClient.getCustomer(updated.getCustomerId());
+        normalizeFavorite(updated);
+        ensureUniqueFavorite(updated, id);
 
-        String dealerName = name.trim();
-
-        Favorites existing = repo.findByDealerNameIgnoreCase(dealerName)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Dealer '" + dealerName + "' not found"));
-
-        String newName = updated.getDealerName().trim();
-
-        // Prevent duplicate rename
-        if (!dealerName.equalsIgnoreCase(newName)) {
-            repo.findByDealerNameIgnoreCase(newName)
-                    .ifPresent(f -> {
-                        throw new DuplicateResourceException(
-                                "Dealer '" + newName + "' already exists");
-                    });
-        }
-
-        existing.setDealerName(newName);
+        existing.setCustomerId(updated.getCustomerId());
+        existing.setDealerId(updated.getDealerId());
+        existing.setDealerName(updated.getDealerName());
         existing.setAddress(updated.getAddress());
         existing.setProductName(updated.getProductName());
         existing.setReason(updated.getReason());
@@ -113,38 +79,78 @@ public class FavoritesServiceImpl implements FavoritesService {
         return repo.save(existing);
     }
 
-    // =========================
-    // LIST ALL
-    // =========================
+    @Override
+    public Favorites updateByName(String name, Favorites updated) {
+        List<Favorites> favorites = findByDealerNameOrThrow(name);
+        if (favorites.size() > 1) {
+            throw new DuplicateResourceException(
+                    "Multiple favorites found for dealer '" + name.trim() + "'. Use the id-based update endpoint.");
+        }
+        return updateById(favorites.get(0).getId(), updated);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<Favorites> listAll() {
         return repo.findAll();
     }
 
-    // =========================
-    // LIST BY REASON
-    // =========================
     @Override
     @Transactional(readOnly = true)
     public List<Favorites> listByReason(String reason) {
         return repo.findByReasonContainingIgnoreCase(reason.trim());
     }
 
-    // =========================
-    // LIST BY NAME
-    // =========================
     @Override
     @Transactional(readOnly = true)
     public List<Favorites> listByName(String name) {
+        return findByDealerNameOrThrow(name);
+    }
 
-        String dealerName = name.trim();
+    private void validateFavorite(Favorites favorite) {
+        if (favorite == null) {
+            throw new IllegalArgumentException("Favorite object cannot be null");
+        }
+    }
 
-        Favorites favorite = repo.findByDealerNameIgnoreCase(dealerName)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Dealer '" + dealerName + "' not found"));
+    private void normalizeFavorite(Favorites favorite) {
+        favorite.setDealerName(normalizeDealerName(favorite.getDealerName()));
+        favorite.setAddress(favorite.getAddress() == null ? "" : favorite.getAddress().trim());
+        favorite.setProductName(normalizeProductName(favorite.getProductName()));
+        favorite.setReason(favorite.getReason() == null ? "" : favorite.getReason().trim());
+    }
 
-        return List.of(favorite);
+    private void ensureUniqueFavorite(Favorites favorite, Long ignoreId) {
+        repo.findByCustomerIdAndDealerIdAndProductNameIgnoreCase(
+                favorite.getCustomerId(),
+                favorite.getDealerId(),
+                favorite.getProductName()
+        ).ifPresent(existing -> {
+            if (ignoreId == null || !existing.getId().equals(ignoreId)) {
+                throw new DuplicateResourceException(
+                        "Favorite already exists for this dealer and product");
+            }
+        });
+    }
+
+    private List<Favorites> findByDealerNameOrThrow(String dealerName) {
+        String normalizedDealerName = normalizeDealerName(dealerName);
+        List<Favorites> favorites = repo.findByDealerNameIgnoreCase(normalizedDealerName);
+        if (favorites.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    "Dealer '" + normalizedDealerName + "' not found in favorites");
+        }
+        return favorites;
+    }
+
+    private String normalizeDealerName(String dealerName) {
+        if (dealerName == null || dealerName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Dealer name is required");
+        }
+        return dealerName.trim();
+    }
+
+    private String normalizeProductName(String productName) {
+        return productName == null ? "" : productName.trim();
     }
 }

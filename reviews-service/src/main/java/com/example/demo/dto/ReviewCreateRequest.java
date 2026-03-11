@@ -10,7 +10,6 @@ import lombok.Data;
 @Data
 public class ReviewCreateRequest {
 
-	
     @NotNull
     private Long customerId;
 
@@ -19,7 +18,7 @@ public class ReviewCreateRequest {
     private String productName;
 
     @NotNull
-    @Min(1) @Max(5)
+    @Min(1) @Max(10)
     private Integer rating;
 
     @Size(max = 200)

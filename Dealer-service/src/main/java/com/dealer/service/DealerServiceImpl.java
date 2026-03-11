@@ -23,6 +23,9 @@ public class DealerServiceImpl implements DealerService {
         if (repository.existsByDealerName(dto.getDealerName())) {
             throw new DealerAlreadyExistsException("Dealer already exists");
         }
+        if (dto.getEmail() != null && repository.existsByEmail(dto.getEmail())) {
+            throw new DealerAlreadyExistsException("Dealer with this email already exists");
+        }
 
         Dealer dealer = Dealer.builder()
                 .dealerName(dto.getDealerName())
@@ -66,6 +69,14 @@ public class DealerServiceImpl implements DealerService {
 
         Dealer dealer = repository.findById(id)
                 .orElseThrow(() -> new DealerNotFoundException("Dealer not found"));
+
+        return mapToDTO(dealer);
+    }
+
+    public DealerResponseDTO getDealerByEmail(String email) {
+
+        Dealer dealer = repository.findByEmail(email)
+                .orElseThrow(() -> new DealerNotFoundByEmailException("Dealer not found with email: " + email));
 
         return mapToDTO(dealer);
     }

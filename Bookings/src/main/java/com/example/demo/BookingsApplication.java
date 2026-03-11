@@ -9,6 +9,6 @@ public class BookingsApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(BookingsApplication.class, args);
+		System.out.println("Bookings Is Running Successfully !");
 	}
-
 }

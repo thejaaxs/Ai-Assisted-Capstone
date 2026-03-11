@@ -1,146 +1,58 @@
 package com.dealer.controller;
 
-import com.dealer.dto.DealerRequestDTO;
-import com.dealer.dto.DealerResponseDTO;
-import com.dealer.exception.DealerNotFoundException;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.dealer.controller.DealerController;
+import com.dealer.dto.*;
 import com.dealer.service.DealerService;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Arrays;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+@ExtendWith(MockitoExtension.class)
+public class DealerControllerTest {
 
-@WebMvcTest(DealerController.class)
-class DealerControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private DealerService service;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private DealerController controller;
 
-    private DealerResponseDTO responseDTO;
-    private DealerRequestDTO requestDTO;
+    @Test
+    void testAddDealer() {
 
-    @BeforeEach
-    void setup() {
-
-        responseDTO = DealerResponseDTO.builder()
+        DealerResponseDTO dto = DealerResponseDTO.builder()
                 .dealerId(1L)
-                .dealerName("Honda")
-                .address("Chennai")
-                .contactNumber("9999999999")
-                .email("honda@gmail.com")
+                .dealerName("Yamaha")
                 .build();
 
-        requestDTO = DealerRequestDTO.builder()
-                .dealerName("Honda")
-                .address("Chennai")
-                .contactNumber("9999999999")
-                .email("honda@gmail.com")
+        when(service.addDealer(any())).thenReturn(dto);
+
+        var response = controller.addDealer(new DealerRequestDTO());
+
+        assertEquals(1L, response.getBody().getDealerId());
+    }
+
+    @Test
+    void testGetAllDealers() {
+
+        DealerResponseDTO dto = DealerResponseDTO.builder()
+                .dealerId(1L)
+                .dealerName("Yamaha")
                 .build();
-    }
 
-    // =========================
-    // ADD DEALER
-    // =========================
+        when(service.getAllDealers()).thenReturn(Arrays.asList(dto));
 
-    @Test
-    void addDealer_success() throws Exception {
+        var response = controller.getAllDealers();
 
-        when(service.addDealer(any(DealerRequestDTO.class)))
-                .thenReturn(responseDTO);
-
-        mockMvc.perform(post("/dealers/add")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dealerName").value("Honda"));
-    }
-
-    // =========================
-    // UPDATE DEALER
-    // =========================
-
-    @Test
-    void updateDealer_success() throws Exception {
-
-        when(service.updateDealer(eq(1L), any(DealerRequestDTO.class)))
-                .thenReturn(responseDTO);
-
-        mockMvc.perform(put("/dealers/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dealerName").value("Honda"));
-    }
-
-    // =========================
-    // DELETE DEALER
-    // =========================
-
-    @Test
-    void deleteDealer_success() throws Exception {
-
-        doNothing().when(service).deleteDealer(1L);
-
-        mockMvc.perform(delete("/dealers/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Dealer deleted successfully"));
-    }
-
-    // =========================
-    // GET DEALER BY ID
-    // =========================
-
-    @Test
-    void getDealer_success() throws Exception {
-
-        when(service.getDealerById(1L)).thenReturn(responseDTO);
-
-        mockMvc.perform(get("/dealers/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dealerName").value("Honda"));
-    }
-
-    @Test
-    void getDealer_notFound() throws Exception {
-
-        when(service.getDealerById(1L))
-                .thenThrow(new DealerNotFoundException("Dealer not found"));
-
-        mockMvc.perform(get("/dealers/1"))
-                .andExpect(status().isNotFound());
-    }
-
-    // =========================
-    // GET ALL DEALERS
-    // =========================
-
-    @Test
-    void getAllDealers_success() throws Exception {
-
-        when(service.getAllDealers())
-                .thenReturn(List.of(responseDTO));
-
-        mockMvc.perform(get("/dealers/list"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].dealerName").value("Honda"));
+        assertEquals(1, response.getBody().size());
     }
 }

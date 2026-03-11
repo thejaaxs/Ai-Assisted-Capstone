@@ -7,8 +7,17 @@ import org.springframework.web.bind.annotation.*;
 public interface BookingClient {
 
     @GetMapping("/bookings/{id}")
-    Object getBookingById(@PathVariable("id") Long id);
+    BookingDTO getBookingById(@PathVariable("id") Long id);
 
     @PutMapping("/bookings/confirm/{id}")
-    Object confirmBooking(@PathVariable("id") Long id);
+    BookingDTO confirmBooking(@PathVariable("id") Long id);
+
+    class BookingDTO {
+        public Long id;
+        public Long customerId;
+        public Long dealerId;
+        public Double amount;
+        public String bookingStatus;
+        public String paymentStatus;
+    }
 }

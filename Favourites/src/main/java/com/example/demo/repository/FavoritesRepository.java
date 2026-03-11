@@ -7,7 +7,9 @@ import java.util.Optional;
 
 public interface FavoritesRepository extends JpaRepository<Favorites, Long> {
 
- Optional<Favorites> findByDealerNameIgnoreCase(String dealerName);
+    List<Favorites> findByDealerNameIgnoreCase(String dealerName);
+
+    Optional<Favorites> findByCustomerIdAndDealerIdAndProductNameIgnoreCase(Long customerId, Long dealerId, String productName);
 
     List<Favorites> findByProductNameIgnoreCase(String productName);
 

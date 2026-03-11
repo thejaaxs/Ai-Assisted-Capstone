@@ -3,7 +3,7 @@ package com.example.demo.feign;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "CUSTOMER")
+@FeignClient(name = "CUSTOMER-SERVICE")
 public interface CustomerClient {
 
     @GetMapping("/customers/{id}")

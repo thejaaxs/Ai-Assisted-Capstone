@@ -148,7 +148,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     // ============================
     // LIST ALL
-    // ============================
+    // ============================,
     @Override
     @Transactional(readOnly = true)
     public List<ReviewResponse> listAll() {
@@ -170,6 +170,9 @@ public class ReviewServiceImpl implements ReviewService {
                 .rating(r.getRating())
                 .title(r.getTitle())
                 .comment(r.getComment())
+                // ✅ auditing fields (from AuditableEntity)
+                .createdAt(r.getCreatedAt())
+                .updatedAt(r.getUpdatedAt())
                 .build();
     }
 }

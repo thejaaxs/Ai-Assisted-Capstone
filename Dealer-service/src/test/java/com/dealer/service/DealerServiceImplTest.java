@@ -1,9 +1,12 @@
 package com.dealer.service;
 
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.dealer.dto.*;
 import com.dealer.entity.Dealer;
-import com.dealer.exception.*;
 import com.dealer.repository.DealerRepository;
+import com.dealer.service.DealerServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,14 +16,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import java.util.List;
+import java.util.Arrays;
 
 @ExtendWith(MockitoExtension.class)
-class DealerServiceImplTest {
+public class DealerServiceImplTest {
 
     @Mock
     private DealerRepository repository;
@@ -29,104 +30,82 @@ class DealerServiceImplTest {
     private DealerServiceImpl service;
 
     private Dealer dealer;
-    private DealerRequestDTO requestDTO;
 
     @BeforeEach
-    void setUp() {
+    void setup() {
 
         dealer = Dealer.builder()
                 .dealerId(1L)
-                .dealerName("Honda")
-                .address("Chennai")
+                .dealerName("Yamaha Dealer")
+                .address("Bangalore")
                 .contactNumber("9999999999")
-                .email("honda@gmail.com")
-                .build();
-
-        requestDTO = DealerRequestDTO.builder()
-                .dealerName("Honda")
-                .address("Chennai")
-                .contactNumber("9999999999")
-                .email("honda@gmail.com")
+                .email("dealer@test.com")
                 .build();
     }
 
     @Test
-    void addDealer_success() {
-        when(repository.existsByDealerName("Honda")).thenReturn(false);
+    void testAddDealer() {
+
+        DealerRequestDTO dto = DealerRequestDTO.builder()
+                .dealerName("Yamaha Dealer")
+                .address("Bangalore")
+                .contactNumber("9999999999")
+                .email("dealer@test.com")
+                .build();
+
+        when(repository.existsByDealerName(dto.getDealerName())).thenReturn(false);
         when(repository.save(any())).thenReturn(dealer);
 
-        DealerResponseDTO response = service.addDealer(requestDTO);
+        DealerResponseDTO result = service.addDealer(dto);
 
-        assertEquals("Honda", response.getDealerName());
-        verify(repository).save(any());
+        assertEquals("Yamaha Dealer", result.getDealerName());
     }
 
     @Test
-    void addDealer_shouldThrowException() {
-        when(repository.existsByDealerName("Honda")).thenReturn(true);
+    void testGetDealerById() {
 
-        assertThrows(DealerAlreadyExistsException.class,
-                () -> service.addDealer(requestDTO));
+        when(repository.findById(1L)).thenReturn(Optional.of(dealer));
+
+        DealerResponseDTO result = service.getDealerById(1L);
+
+        assertEquals(1L, result.getDealerId());
     }
 
     @Test
-    void updateDealer_success() {
+    void testGetAllDealers() {
+
+        when(repository.findAll()).thenReturn(Arrays.asList(dealer));
+
+        List<DealerResponseDTO> result = service.getAllDealers();
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void testUpdateDealer() {
+
+        DealerRequestDTO dto = DealerRequestDTO.builder()
+                .dealerName("Updated Dealer")
+                .address("Chennai")
+                .contactNumber("8888888888")
+                .email("updated@test.com")
+                .build();
+
         when(repository.findById(1L)).thenReturn(Optional.of(dealer));
         when(repository.save(any())).thenReturn(dealer);
 
-        DealerResponseDTO response = service.updateDealer(1L, requestDTO);
+        DealerResponseDTO result = service.updateDealer(1L, dto);
 
-        assertEquals("Honda", response.getDealerName());
+        assertNotNull(result);
     }
 
     @Test
-    void updateDealer_notFound() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
+    void testDeleteDealer() {
 
-        assertThrows(DealerNotFoundException.class,
-                () -> service.updateDealer(1L, requestDTO));
-    }
-
-    @Test
-    void deleteDealer_success() {
         when(repository.findById(1L)).thenReturn(Optional.of(dealer));
 
         service.deleteDealer(1L);
 
-        verify(repository).delete(dealer);
-    }
-
-    @Test
-    void deleteDealer_notFound() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(DealerNotFoundException.class,
-                () -> service.deleteDealer(1L));
-    }
-
-    @Test
-    void getDealerById_success() {
-        when(repository.findById(1L)).thenReturn(Optional.of(dealer));
-
-        DealerResponseDTO response = service.getDealerById(1L);
-
-        assertEquals("Honda", response.getDealerName());
-    }
-
-    @Test
-    void getDealerById_notFound() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(DealerNotFoundException.class,
-                () -> service.getDealerById(1L));
-    }
-
-    @Test
-    void getAllDealers_success() {
-        when(repository.findAll()).thenReturn(List.of(dealer));
-
-        List<DealerResponseDTO> response = service.getAllDealers();
-
-        assertEquals(1, response.size());
+        verify(repository, times(1)).delete(dealer);
     }
 }

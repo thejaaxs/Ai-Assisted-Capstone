@@ -13,5 +13,7 @@ public interface DealerService {
 
     DealerResponseDTO getDealerById(Long id);
 
+    DealerResponseDTO getDealerByEmail(String email);
+
     List<DealerResponseDTO> getAllDealers();
 }

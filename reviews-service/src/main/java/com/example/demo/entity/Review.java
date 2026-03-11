@@ -14,10 +14,10 @@ import lombok.*;
   uniqueConstraints = @UniqueConstraint(
       name = "uk_review_customer_product",
       columnNames = {"customer_id", "product_name"}))
-public class Review {
+public class Review extends AuditableEntity {   // ✅ EXTEND THIS
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)   // 🔥 THIS WAS MISSING
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 

@@ -42,6 +42,11 @@ public class DealerController {
         return ResponseEntity.ok(service.getDealerById(id));
     }
 
+    @GetMapping("/by-email")
+    public ResponseEntity<DealerResponseDTO> getDealerByEmail(@RequestParam String email) {
+        return ResponseEntity.ok(service.getDealerByEmail(email));
+    }
+
     @GetMapping("/list")
     public ResponseEntity<List<DealerResponseDTO>> getAllDealers() {
         return ResponseEntity.ok(service.getAllDealers());

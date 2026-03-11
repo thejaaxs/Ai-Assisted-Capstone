@@ -7,7 +7,6 @@ import com.customer.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -23,41 +22,38 @@ public class CustomerServiceImpl implements CustomerService {
             throw new DuplicateCustomerException("Customer with this email already exists.");
         }
 
-        customer.setCreatedAt(LocalDateTime.now());
-        customer.setCreatedBy("SYSTEM");
-
         return repository.save(customer);
     }
 
     @Override
-    public Customer updateCustomer(Long id, Customer customer) {
+    public Customer updateCustomer(Long customerId, Customer customer) {
 
-        Customer existing = repository.findById(id)
-                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID: " + id));
+        Customer existing = repository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID: " + customerId));
 
-        existing.setName(customer.getName());
+        existing.setCustomerName(customer.getCustomerName());
         existing.setAddress(customer.getAddress());
-        existing.setPhone(customer.getPhone());
-        existing.setUpdatedAt(LocalDateTime.now());
-        existing.setUpdatedBy("SYSTEM");
+        existing.setContactNumber(customer.getContactNumber());
+
+        // ✅ email usually should not change; if you want to allow it, tell me
+        // existing.setEmail(customer.getEmail());
 
         return repository.save(existing);
     }
 
     @Override
-    public void deleteCustomer(Long id) {
+    public void deleteCustomer(Long customerId) {
 
-        Customer existing = repository.findById(id)
-                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID: " + id));
+        Customer existing = repository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID: " + customerId));
 
         repository.delete(existing);
     }
 
     @Override
-    public Customer getCustomerById(Long id) {
-
-        return repository.findById(id)
-                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID: " + id));
+    public Customer getCustomerById(Long customerId) {
+        return repository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID: " + customerId));
     }
 
     @Override

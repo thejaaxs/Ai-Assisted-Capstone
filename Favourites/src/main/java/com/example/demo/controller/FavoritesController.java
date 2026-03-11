@@ -21,6 +21,17 @@ public class FavoritesController {
         return service.add(favorite);
     }
 
+    @GetMapping("/{id}")
+    public Favorites getById(@PathVariable Long id) {
+        return service.getById(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public String deleteById(@PathVariable Long id) {
+        service.deleteById(id);
+        return "Deleted Successfully";
+    }
+
     // 2️⃣ Delete by Dealer Name
     @DeleteMapping("/deleteByName")
     public String deleteByName(@RequestParam String name){
@@ -40,6 +51,12 @@ public class FavoritesController {
     public Favorites update(@RequestParam String name,
                             @RequestBody Favorites favorite){
         return service.updateByName(name, favorite);
+    }
+
+    @PutMapping("/{id}")
+    public Favorites updateById(@PathVariable Long id,
+                                @RequestBody Favorites favorite) {
+        return service.updateById(id, favorite);
     }
 
     // 5️⃣ List All Dealers

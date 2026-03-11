@@ -11,9 +11,13 @@ public interface BookingService {
 
     List<Booking> getBookingsByDealer(Long dealerId);
 
-    Booking confirmBooking(Long id);
-    
+    Booking acceptBooking(Long bookingId);
+
+    Booking rejectBooking(Long bookingId);
+
+    Booking confirmBooking(Long bookingId);
+
     Booking cancelBooking(Long bookingId);
-    
+
     Booking getById(Long id);
 }

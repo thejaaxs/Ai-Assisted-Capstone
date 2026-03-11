@@ -13,4 +13,7 @@ public class ReviewResponse {
     private Integer rating;
     private String title;
     private String comment;
+
+    private Instant createdAt;
+    private Instant updatedAt;
 }
